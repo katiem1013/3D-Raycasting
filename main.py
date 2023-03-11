@@ -6,7 +6,7 @@ clock = pygame.time.Clock()
 
 screen_width = 1920
 screen_height = 1080
-map_size = 8
+map_size = 10
 fov = math.pi / 3
 half_fov = fov / 2
 
@@ -24,14 +24,16 @@ player_angle = math.pi
 pygame.init()
 
 game_map = (
-    '########'
-    '#  #   #'
-    '#  #   #'
-    '#    ###'
-    '###    #'
-    '#    ###'
-    '#    # #'
-    '########'
+    '##########'
+    '#  #   ###'
+    '#  #   # #'
+    '#    ### #'
+    '###      #'
+    '#    #####'
+    '#    #   #'
+    '#    #   #'
+    '#        #'
+    '##########'
 )
 
 
@@ -52,16 +54,18 @@ def cast_rays():
             target_y = player_y + math.cos(start_angle) * depth
 
             # convert target XY coordinate to map row and collum
-            col = int(target_x / tile_size)
-            row = int(target_y / tile_size)
+            col2 = int(target_x / tile_size)
+            row2 = int(target_y / tile_size)
 
             # calculate map square index
-            square = row * map_size + col
+            square = row2 * map_size + col2
 
             if game_map[square] == '#':
 
                 # wall shading
-                color = 255 / (1 + depth * depth * 0.0001)
+                color = 201 / (1 + depth * depth * 0.0001)
+                color2 = 169 / (1 + depth * depth * 0.0001)
+                color3 = 118 / (1 + depth * depth * 0.0001)
 
                 # fix fish eye effect
                 depth *= math.cos(player_angle - start_angle)
@@ -73,15 +77,14 @@ def cast_rays():
                 if wall_height > screen_height:
                     wall_height = screen_height
 
-                # draw 3D projection (rectangle by rectangle...)
-                pygame.draw.rect(screen, (color, color, color), (
+                # draw 3D projection
+                pygame.draw.rect(screen, (color, color2, color3), (
                     screen_height + ray * scale,
                     (screen_height / 2) - wall_height / 2,
                     scale, wall_height))
 
                 break
 
-        # incrementing angle by a single step
         # incrementing angle by a single step
         start_angle += step_angle
 
@@ -91,6 +94,7 @@ forward = True
 run = True
 while run:
 
+    # if the game ends or the escape key is pressed run will set to FALSE and stop the while loop
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
@@ -102,6 +106,8 @@ while run:
     col = int(player_x / tile_size)
     row = int(player_y / tile_size)
     square1 = row * map_size + col
+
+    # stops the player from going through the wall
     if game_map[square1] == '#':
         if forward:
             player_x -= -math.sin(player_angle) * 5
@@ -110,29 +116,29 @@ while run:
             player_x += -math.sin(player_angle) * 5
             player_y += math.cos(player_angle) * 5
 
-        # calculate map square index
-
+    # draws the ray casting to the screen, making the floor and ceiling two different colours
     pygame.draw.rect(screen, (100, 100, 100), (1080, screen_height / 2, screen_height, screen_height))
-    pygame.draw.rect(screen, (200, 200, 200), (1080, -screen_height / 2, screen_height, screen_height))
+    pygame.draw.rect(screen, (174, 214, 241), (1080, -screen_height / 2, screen_height, screen_height))
 
+    # runs the cast rays function while the game is running
     cast_rays()
 
+    # gets the player input for moving around, uses WASD
     keys = pygame.key.get_pressed()
-
-    if keys[pygame.K_LEFT]:
+    if keys[pygame.K_a]:
         player_angle -= 0.1
-    if keys[pygame.K_RIGHT]:
+    if keys[pygame.K_d]:
         player_angle += 0.1
-    if keys[pygame.K_UP]:
-        forward = True
-        player_x += -math.sin(player_angle) * 5
-        player_y += math.cos(player_angle) * 5
-    if keys[pygame.K_DOWN]:
-        player_x -= -math.sin(player_angle) * 5
-        player_y -= math.cos(player_angle) * 5
+    if keys[pygame.K_w]:
+        forward = True  # sets forward true so that the player can be stopped from going through walls
+        player_x += -math.sin(player_angle) * 6
+        player_y += math.cos(player_angle) * 6
+    if keys[pygame.K_s]:
+        player_x -= -math.sin(player_angle) * 6
+        player_y -= math.cos(player_angle) * 6
 
     # set FPS
-    clock.tick(30)
+    clock.tick(60)
 
     # display FPS
     fps = str(int(clock.get_fps()))
